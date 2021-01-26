@@ -164,6 +164,21 @@ def api_9():
     ])))
 
 
+@app.route('/api/query/10', methods=['GET'])
+def api_10():
+    numbers = list(db.user.aggregate([
+                            {"$group": {"_id": "$telephone_nr", "count": {"$sum": 1}}},
+                            {"$sort": {"count": -1}},
+                            {"$match": {"count": {"$gte": 2}}}
+                            ]))
+    result = []
+
+    for num in numbers:
+        result.append(list(db.user.find({"telephone_nr": num['_id']})))
+
+    return dumps(result)
+
+
 @app.route('/api/query/11', methods=['GET'])
 def api_11():
     if 'name' in request.args:
@@ -175,8 +190,7 @@ def api_11():
         {"$match": {"name": name}},
         {"$unwind": "$upvotes"},
         {"$group": {"_id": "$upvotes.ward"}},
-        {"$sort": {"_id": -1}}
-    ])))
+        {"$sort": {"_id": -1}}])))
 
 
 @app.route('/api/incident', methods=['POST'])
@@ -202,8 +216,7 @@ def api_insert_upvote():
                                           {'_id': result.inserted_id,
                                            'name': body['name']}
                                       },
-                             '$inc': {'total_upvotes': 1}
-                             })
+                             '$inc': {'total_upvotes': 1}})
 
     return "Upvote " + str(result.inserted_id) + " from user " + body['name'] + " submited!"
 
